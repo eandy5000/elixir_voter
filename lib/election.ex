@@ -2,19 +2,24 @@ defmodule Election do
   defstruct(
     name: "Dog Catcher",
     candidates: [
-      Candidate.new(1, "John Smith"),
-      Candidate.new(2, "Jon Pertwee")
+      Candidate.new(1, "Bill Bailey"),
+      Candidate.new(2, "Joe Smith")
     ],
-    next_id: 3,
-    display_error: ""
+    next_id: 3
   )
 
   def run() do
     %Election{} |> run()
   end
 
+  def run(:quit), do: :quit
+
   def run(election = %Election{}) do
-    [clear_hack()]
+    [
+      hack_clear(),
+      hack_clear(),
+      hack_clear()
+    ]
     |> IO.write()
 
     election
@@ -26,50 +31,46 @@ defmodule Election do
     election
     |> update(command)
     |> run()
-
-  end
-
-  def clear_hack() do
-    "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
   end
 
   def update(election, cmd) when is_binary(cmd) do
     update(election, String.split(cmd))
   end
 
-  def update(election, ["n" <> _| args]) do
-   name = Enum.join(args, " ")
-   %{election | name: name}
+  def update(_election, ["q" <> _]), do: :quit
+
+  def update(election, ["n" <> _ | args]) do
+    name = Enum.join(args, " ")
+    # %{election | name: name}
+    election
+    |> Map.put(:name, name)
   end
 
   def update(election, ["a" <> _ | args]) do
     name = Enum.join(args, " ")
+
     candidate = Candidate.new(election.next_id, name)
     candidates = [candidate | election.candidates]
-    %{election | candidates: candidates, next_id: election.next_id + 1}
+    # %{election | candidates: candidates, next_id: election.next_id + 1}
+    election
+    |> Map.put(:candidates, candidates)
+    |> Map.put(:next_id, election.next_id)
   end
 
-  def update(election, ["v" <> _ , id]) do
+  def update(election, ["v" <> _, id]) do
     vote(election, Integer.parse(id))
   end
 
-  def vote(election, {id, ""}) do
-    candidates = election.candidates
-    |> Enum.map(&maybe_inc_votes(&1,id))
-    %{election | candidates: candidates}
+  defp vote(election, {id, ""}) do
+    candidates = Enum.map(election.candidates, &maybe_inc_vote(&1, id))
+    # %{election | candidates: candidates}
+    election
+    |> Map.put(:candidates, candidates)
   end
 
-  def maybe_inc_votes(candidate, id) when is_integer(id) do
-    maybe_inc_votes(candidate, candidate.id == id)
-  end
+  defp vote(election, _errors), do: election
 
-  def maybe_inc_votes(candidate, _id = false), do: candidate
-
-  def maybe_inc_votes(candidate, _id = true) do
-    Map.update!(candidate, :votes, &(&1 + 1 ))
-  end
-
-  def view(election) do
+  def view(election = %Election{}) do
     [
       view_header(election),
       view_body(election),
@@ -77,17 +78,20 @@ defmodule Election do
     ]
   end
 
-  def view_body(election) do
-      election.candidates
-      |> sort_candidates_by_vote()
-      |> candidates_to_strings()
-      |> prepend_header_to_candidates()
-  end
-
   def view_header(election) do
     [
       "Election for: #{election.name}\n"
     ]
+  end
+
+  def view_body(election) do
+    candidates =
+      election.candidates
+      |> sort_candidates_by_votes_desc()
+      |> candidates_to_string()
+      |> prepend_candidates_header()
+
+    candidates
   end
 
   def view_footer() do
@@ -97,25 +101,37 @@ defmodule Election do
     ]
   end
 
-  defp sort_candidates_by_vote(candidates) do
-    candidates
-    |> Enum.sort(&(&1.votes >= &2.votes))
+  defp maybe_inc_vote(candidate, id) when is_integer(id) do
+    maybe_inc_vote(candidate, candidate.id == id)
   end
 
-  defp candidates_to_strings(candidates) do
-    candidates
-    |> Enum.map(fn %{id: id, name: name, votes: votes} -> 
-      "#{id}\t#{votes}\t#{name}\n"
-    end)
+  defp maybe_inc_vote(candidate, _inc_vote = false), do: candidate
+
+  defp maybe_inc_vote(candidate, _inc_vote = true) do
+    Map.update!(candidate, :votes, &(&1 + 1))
   end
 
-  defp prepend_header_to_candidates(candidates) do
+  def prepend_candidates_header(candidates) do
     [
       "ID\tVotes\tName\n",
       "-----------------------------\n"
       | candidates
-
     ]
   end
 
+  def candidates_to_string(candidates) do
+    candidates
+    |> Enum.map(fn %{id: id, name: name, votes: votes} ->
+      "#{id}\t#{votes}\t#{name}\n"
+    end)
+  end
+
+  def sort_candidates_by_votes_desc(candidates) do
+    candidates
+    |> Enum.sort(&(&1.votes >= &2.votes))
+  end
+
+  def hack_clear() do
+    "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  end
 end
