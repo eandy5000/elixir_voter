@@ -1,6 +1,6 @@
 defmodule Election do
   defstruct(
-    name: "Dog Catcher",
+    name: "Mayor",
     candidates: [
       Candidate.new(1, "Bill Bailey"),
       Candidate.new(2, "Joe Smith")
