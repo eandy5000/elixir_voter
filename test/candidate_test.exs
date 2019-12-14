@@ -1,5 +1,5 @@
 defmodule CandidateTest do
-    use ExUnit.Case
+  use ExUnit.Case
 
-    doctest Candidate
+  doctest Candidate
 end

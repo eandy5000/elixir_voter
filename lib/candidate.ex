@@ -1,19 +1,18 @@
 defmodule Candidate do
   defstruct [:id, :name, votes: 0]
 
-@doc """
-New creates a new Candidate
+  @doc """
+  new method creates a new candidata
 
-## Parameters
+  ## Parameters
+    - id: candidate id
+    - name: name of the candidate
 
- - id: candidate id
- - name: candidate name
-
-## Example
+  ## Example
     iex> Candidate.new(1, "Joe Smith")
     %Candidate{id: 1, name: "Joe Smith", votes: 0}
 
-"""
+  """
 
   def new(id, name) do
     %Candidate{id: id, name: name}

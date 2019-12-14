@@ -1,24 +1,26 @@
 defmodule Election do
   defstruct(
-    name: "Mayor",
+    name: "Dog Catcher",
     candidates: [
-      Candidate.new(1, "Bill Bailey"),
-      Candidate.new(2, "Joe Smith")
+      Candidate.new(1, "Joe Smith"),
+      Candidate.new(2, "Bill Jones")
     ],
     next_id: 3
   )
 
   def run() do
-    %Election{} |> run()
+    %Election{}
+    |> run()
   end
 
   def run(:quit), do: :quit
 
   def run(election = %Election{}) do
     [
-      hack_clear(),
-      hack_clear(),
-      hack_clear()
+      clear_hack(),
+      clear_hack(),
+      clear_hack(),
+      clear_hack()
     ]
     |> IO.write()
 
@@ -26,10 +28,10 @@ defmodule Election do
     |> view()
     |> IO.write()
 
-    command = IO.gets(">")
+    cmd = IO.gets(">")
 
     election
-    |> update(command)
+    |> update(cmd)
     |> run()
   end
 
@@ -37,40 +39,35 @@ defmodule Election do
     update(election, String.split(cmd))
   end
 
-  def update(_election, ["q" <> _]), do: :quit
-
   def update(election, ["n" <> _ | args]) do
     name = Enum.join(args, " ")
-    # %{election | name: name}
-    election
-    |> Map.put(:name, name)
+    %{election | name: name}
   end
 
   def update(election, ["a" <> _ | args]) do
     name = Enum.join(args, " ")
-
     candidate = Candidate.new(election.next_id, name)
     candidates = [candidate | election.candidates]
-    # %{election | candidates: candidates, next_id: election.next_id + 1}
-    election
-    |> Map.put(:candidates, candidates)
-    |> Map.put(:next_id, election.next_id)
+    %{election | candidates: candidates, next_id: election.next_id + 1}
   end
+
+  def update(_election, ["q" <> _]), do: :quit
 
   def update(election, ["v" <> _, id]) do
     vote(election, Integer.parse(id))
   end
 
   defp vote(election, {id, ""}) do
-    candidates = Enum.map(election.candidates, &maybe_inc_vote(&1, id))
-    # %{election | candidates: candidates}
-    election
-    |> Map.put(:candidates, candidates)
+    candidates =
+      election.candidates
+      |> Enum.map(&maybe_inc_votes(&1, id))
+
+    %{election | candidates: candidates}
   end
 
   defp vote(election, _errors), do: election
 
-  def view(election = %Election{}) do
+  def view(election) do
     [
       view_header(election),
       view_body(election),
@@ -78,20 +75,17 @@ defmodule Election do
     ]
   end
 
+  def view_body(election) do
+    election.candidates
+    |> sort_by_votes_desc()
+    |> candidates_to_string()
+    |> prepend_header_to_candidates()
+  end
+
   def view_header(election) do
     [
       "Election for: #{election.name}\n"
     ]
-  end
-
-  def view_body(election) do
-    candidates =
-      election.candidates
-      |> sort_candidates_by_votes_desc()
-      |> candidates_to_string()
-      |> prepend_candidates_header()
-
-    candidates
   end
 
   def view_footer() do
@@ -101,20 +95,25 @@ defmodule Election do
     ]
   end
 
-  defp maybe_inc_vote(candidate, id) when is_integer(id) do
-    maybe_inc_vote(candidate, candidate.id == id)
+  def sort_by_votes_desc(candidates) do
+    candidates
+    |> Enum.sort(&(&1.votes >= &2.votes))
   end
 
-  defp maybe_inc_vote(candidate, _inc_vote = false), do: candidate
+  defp maybe_inc_votes(candidate, id) when is_integer(id) do
+    maybe_inc_votes(candidate, candidate.id == id)
+  end
 
-  defp maybe_inc_vote(candidate, _inc_vote = true) do
+  defp maybe_inc_votes(candidate, _inc_vote = false), do: candidate
+
+  defp maybe_inc_votes(candidate, _inc_vote = true) do
     Map.update!(candidate, :votes, &(&1 + 1))
   end
 
-  def prepend_candidates_header(candidates) do
+  def prepend_header_to_candidates(candidates) do
     [
       "ID\tVotes\tName\n",
-      "-----------------------------\n"
+      "--------------------------------\n"
       | candidates
     ]
   end
@@ -126,12 +125,7 @@ defmodule Election do
     end)
   end
 
-  def sort_candidates_by_votes_desc(candidates) do
-    candidates
-    |> Enum.sort(&(&1.votes >= &2.votes))
-  end
-
-  def hack_clear() do
-    "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  def clear_hack() do
+    "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
   end
 end
